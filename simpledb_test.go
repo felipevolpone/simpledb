@@ -85,10 +85,10 @@ func Test_FetchList(t *testing.T) {
 	}
 
 	var users []user
-	err = db.FetchList(&users, 10)
+	err = db.FetchList(&users, 3)
 	assert.Nil(t, err)
-	assert.Equal(t, 5, len(users))
+	assert.Equal(t, 3, len(users))
 	assert.Equal(t, "henry 1 david throreau", users[0].Name)
-	assert.Equal(t, "henry 5 david throreau", users[4].Name)
+	assert.Equal(t, "henry 3 david throreau", users[2].Name)
 	assert.Equal(t, "book 2", users[1].FavoriteBooks[0])
 }

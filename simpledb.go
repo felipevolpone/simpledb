@@ -101,7 +101,7 @@ func (db *DB) FetchList(items interface{}, limit int) error {
 	sliceType := reflect.Indirect(reflect.ValueOf(items)).Type()
 	namespace := sliceType.Elem().Name()
 
-	for _, value := range db.db.Content.Get(fmt.Sprintf("%s.#.element", namespace)).Array() {
+	for _, value := range db.db.Content.Get(fmt.Sprintf("%s.#.element", namespace)).Array()[:limit] {
 		i := reflect.New(sliceType.Elem())
 		err := json.Unmarshal([]byte(value.String()), i.Interface())
 		if err != nil {
