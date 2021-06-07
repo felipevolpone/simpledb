@@ -76,7 +76,7 @@ func Test_FetchList(t *testing.T) {
 
 	for _, i := range []int{1, 2, 3, 4, 5} {
 		u := user{
-			Name: fmt.Sprintf("henry %d david throreau", i),
+			Name:          fmt.Sprintf("henry %d david throreau", i),
 			FavoriteBooks: []string{fmt.Sprintf("book %d", i)},
 		}
 		err = db.Save(&u)
@@ -91,4 +91,34 @@ func Test_FetchList(t *testing.T) {
 	assert.Equal(t, "henry 1 david throreau", users[0].Name)
 	assert.Equal(t, "henry 3 david throreau", users[2].Name)
 	assert.Equal(t, "book 2", users[1].FavoriteBooks[0])
+}
+
+func Test_Drop(t *testing.T) {
+	os.Remove("empty.json")
+	db, err := Open("empty.json")
+	assert.Nil(t, err)
+
+	type user struct {
+		Name string
+	}
+
+	u := &user{
+		Name: "something",
+	}
+	err = db.Save(u)
+	assert.Nil(t, err)
+
+	type book struct {
+		Title string
+	}
+	b := &book{
+		Title: "lotr",
+	}
+	err = db.Save(b)
+	assert.Nil(t, err)
+
+	err = db.Drop(&user{})
+	assert.Nil(t, err)
+	assert.Equal(t, "", db.db.Content.Get("user").Raw)
+	assert.NotEmpty(t, db.db.Content.Get("book"))
 }

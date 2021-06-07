@@ -108,11 +108,30 @@ func (db *DB) FetchList(items interface{}, limit int) error {
 			return err
 		}
 
-		fmt.Println(i.Elem())
 		elem.Set(reflect.Append(elem, i.Elem()))
 	}
 
 	return nil
+}
+
+// Drop deletes all records from the given struct type
+func (db *DB) Drop(item interface{}) error {
+	ref := reflect.ValueOf(item)
+
+	if !ref.IsValid() || ref.Kind() != reflect.Ptr || ref.Elem().Kind() != reflect.Struct {
+		return ErrDataMustBeStructPointer
+	}
+
+	structType := reflect.TypeOf(item)
+	namespace := structType.Elem().Name()
+
+	updateValue, err := sjson.Delete(db.db.Content.Raw, namespace)
+	if err != nil {
+		return err
+	}
+
+	db.db.Content.Raw = updateValue
+	return db.write()
 }
 
 func (db *DB) write() error {
