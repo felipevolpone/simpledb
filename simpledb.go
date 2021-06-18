@@ -134,6 +134,45 @@ func (db *DB) Drop(item interface{}) error {
 	return db.write()
 }
 
+// FindOne searches for an item given a field and a value to compare
+func (db *DB) FindOne(item interface{}, field string, value interface{}) error {
+
+	ref := reflect.ValueOf(item)
+	elem := ref.Elem()
+
+	if !ref.IsValid() || ref.Kind() != reflect.Ptr || ref.Elem().Kind() != reflect.Struct {
+		return ErrDataMustBeStructPointer
+	}
+
+	structType := reflect.TypeOf(item)
+	namespace := structType.Elem().Name()
+
+	var res gjson.Result
+
+	gjson.Get(db.db.Content.Raw, namespace).ForEach(
+		func(_, v gjson.Result) bool {
+			if v.Get(fmt.Sprintf("element.%s", field)).String() == fmt.Sprintf("%v", value) {
+				res = v
+				return false
+			}
+			return true
+		},
+	)
+
+	if !res.Exists() {
+		return ErrNotFound
+	}
+
+	i := reflect.New(structType.Elem())
+	err := json.Unmarshal([]byte(res.Get("element").String()), i.Interface())
+	if err != nil {
+		return err
+	}
+	elem.Set(i.Elem())
+
+	return nil
+}
+
 func (db *DB) write() error {
 	return ioutil.WriteFile(db.Path, []byte(db.db.Content.Raw), 0644)
 }

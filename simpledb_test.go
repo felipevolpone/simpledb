@@ -122,3 +122,37 @@ func Test_Drop(t *testing.T) {
 	assert.Equal(t, "", db.db.Content.Get("user").Raw)
 	assert.NotEmpty(t, db.db.Content.Get("book"))
 }
+
+func Test_Find(t *testing.T) {
+	os.Remove("empty.json")
+	db, err := Open("empty.json")
+	assert.Nil(t, err)
+
+	type user struct {
+		Name string
+		Age  int
+	}
+
+	for _, i := range []int{1, 2, 3, 4, 5} {
+		u := user{
+			Name: fmt.Sprintf("harry potter %d", i),
+			Age:  i,
+		}
+		err = db.Save(&u)
+		time.Sleep(time.Microsecond * 100)
+		assert.Nil(t, err)
+	}
+
+	var uu user
+	err = db.FindOne(&uu, "Name", "harry potter 3")
+	assert.Nil(t, err)
+	assert.Equal(t, "harry potter 3", uu.Name)
+
+	var auu user
+	err = db.FindOne(&auu, "Age", 5)
+	assert.Nil(t, err)
+	assert.Equal(t, 5, auu.Age)
+
+	err = db.FindOne(&uu, "Name", "harry potter 10")
+	assert.Equal(t, err, ErrNotFound)
+}
