@@ -33,6 +33,9 @@ type dbData struct {
 	Content gjson.Result
 }
 
+// Where represents data query like SQL where
+type Where map[string]interface{}
+
 // Open opens a database and stabilishes a connection
 func Open(path string) (*DB, error) {
 
@@ -155,6 +158,55 @@ func (db *DB) FindOne(item interface{}, field string, value interface{}) error {
 				res = v
 				return false
 			}
+			return true
+		},
+	)
+
+	if !res.Exists() {
+		return ErrNotFound
+	}
+
+	i := reflect.New(structType.Elem())
+	err := json.Unmarshal([]byte(res.Get("element").String()), i.Interface())
+	if err != nil {
+		return err
+	}
+	elem.Set(i.Elem())
+
+	return nil
+}
+
+// FindOneWhere searches for an item based on a Where expression
+func (db *DB) FindOneWhere(item interface{}, w Where) error {
+
+	ref := reflect.ValueOf(item)
+
+	if !ref.IsValid() || ref.Kind() != reflect.Ptr || ref.Elem().Kind() != reflect.Struct {
+		return ErrDataMustBeStructPointer
+	}
+
+	elem := ref.Elem()
+	structType := reflect.TypeOf(item)
+	namespace := structType.Elem().Name()
+
+	var res gjson.Result
+
+	gjson.Get(db.db.Content.Raw, namespace).ForEach(
+		func(_, vr gjson.Result) bool {
+			found := false
+			for k, v := range w {
+				if vr.Get(fmt.Sprintf("element.%s", k)).String() == fmt.Sprintf("%v", v) {
+					found = true
+					continue
+				}
+				found = false
+			}
+
+			if found {
+				res = vr
+				return false
+			}
+
 			return true
 		},
 	)

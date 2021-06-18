@@ -160,3 +160,37 @@ func Test_FindOne(t *testing.T) {
 	err = db.FindOne(&uu, "Name", "harry potter 10")
 	assert.Equal(t, err, ErrNotFound)
 }
+
+func Test_FindOneWhere(t *testing.T) {
+	os.Remove("empty.json")
+	db, err := Open("empty.json")
+	assert.Nil(t, err)
+
+	type user struct {
+		Name string
+		Age  int
+	}
+
+	notPointer := user{}
+	err = db.FindOneWhere(notPointer, Where{"Name": "Something"})
+	assert.Equal(t, err, ErrDataMustBeStructPointer)
+
+	for _, i := range []int{1, 2, 3, 4, 5} {
+		u := user{
+			Name: fmt.Sprintf("harry potter %d", i),
+			Age:  i * 10,
+		}
+		err = db.Save(&u)
+		time.Sleep(time.Microsecond * 100)
+		assert.Nil(t, err)
+	}
+
+	var uu user
+	err = db.FindOneWhere(&uu, Where{"Name": "harry potter 3", "Age": 30})
+	assert.Nil(t, err)
+	assert.Equal(t, "harry potter 3", uu.Name)
+	assert.Equal(t, 30, uu.Age)
+
+	err = db.FindOneWhere(&uu, Where{"Name": "harry potter 10"})
+	assert.Equal(t, err, ErrNotFound)
+}
