@@ -138,12 +138,12 @@ func (db *DB) Drop(item interface{}) error {
 func (db *DB) FindOne(item interface{}, field string, value interface{}) error {
 
 	ref := reflect.ValueOf(item)
-	elem := ref.Elem()
 
 	if !ref.IsValid() || ref.Kind() != reflect.Ptr || ref.Elem().Kind() != reflect.Struct {
 		return ErrDataMustBeStructPointer
 	}
 
+	elem := ref.Elem()
 	structType := reflect.TypeOf(item)
 	namespace := structType.Elem().Name()
 

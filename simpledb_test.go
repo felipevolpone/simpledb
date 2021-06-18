@@ -123,7 +123,7 @@ func Test_Drop(t *testing.T) {
 	assert.NotEmpty(t, db.db.Content.Get("book"))
 }
 
-func Test_Find(t *testing.T) {
+func Test_FindOne(t *testing.T) {
 	os.Remove("empty.json")
 	db, err := Open("empty.json")
 	assert.Nil(t, err)
@@ -132,6 +132,10 @@ func Test_Find(t *testing.T) {
 		Name string
 		Age  int
 	}
+
+	notPointer := user{}
+	err = db.FindOne(notPointer, "Name", "Something")
+	assert.Equal(t, err, ErrDataMustBeStructPointer)
 
 	for _, i := range []int{1, 2, 3, 4, 5} {
 		u := user{
