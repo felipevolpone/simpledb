@@ -9,6 +9,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+type book struct{
+	Title string
+	ReleaseYear int
+	Genre string
+	Highlights []string
+}
+
 func Test_Open(t *testing.T) {
 	db, err := Open("local_test.json")
 
@@ -39,27 +46,21 @@ func Test_Save(t *testing.T) {
 	db, err := Open("testing.json")
 	assert.Nil(t, err)
 
-	type user struct {
-		Name          string
-		Age           int
-		FavoriteBooks []string
+	b := book{
+		Title: "walden",
+		ReleaseYear:  1854,
 	}
 
-	u := user{
-		Name: "henry david throreau",
-		Age:  44,
-	}
-
-	err = db.Save(&u)
+	err = db.Save(&b)
 	assert.Nil(t, err)
 
-	assert.Equal(t, "henry david throreau", db.db.Content.Get("user.0.element.Name").String(), db.db.Content.String())
-	assert.Equal(t, int64(44), db.db.Content.Get("user.0.element.Age").Int(), db.db.Content.String())
+	assert.Equal(t, "walden", db.db.Content.Get("book.0.element.Title").String(), db.db.Content.String())
+	assert.Equal(t, int64(1854), db.db.Content.Get("book.0.element.ReleaseYear").Int(), db.db.Content.String())
 
-	err = db.Save(&user{Name: "j r r tolkien", FavoriteBooks: []string{"the hobbit"}})
+	err = db.Save(&book{Title: "lotr", Highlights: []string{"something"}})
 	assert.Nil(t, err)
 
-	numberOfKeys := len(db.db.Content.Get("user.#.element").Array())
+	numberOfKeys := len(db.db.Content.Get("book.#.element").Array())
 	assert.Equal(t, 2, numberOfKeys)
 }
 
@@ -128,36 +129,31 @@ func Test_FindOne(t *testing.T) {
 	db, err := Open("testing.json")
 	assert.Nil(t, err)
 
-	type user struct {
-		Name string
-		Age  int
-	}
-
-	notPointer := user{}
+	notPointer := book{}
 	err = db.FindOne(notPointer, "Name", "Something")
 	assert.Equal(t, err, ErrDataMustBeStructPointer)
 
 	for _, i := range []int{1, 2, 3, 4, 5} {
-		u := user{
-			Name: fmt.Sprintf("harry potter %d", i),
-			Age:  i,
+		u := book{
+			Title: fmt.Sprintf("harry potter %d", i),
+			ReleaseYear:  i,
 		}
 		err = db.Save(&u)
 		time.Sleep(time.Microsecond * 100)
 		assert.Nil(t, err)
 	}
 
-	var uu user
-	err = db.FindOne(&uu, "Name", "harry potter 3")
+	var b book
+	err = db.FindOne(&b, "Title", "harry potter 3")
 	assert.Nil(t, err)
-	assert.Equal(t, "harry potter 3", uu.Name)
+	assert.Equal(t, "harry potter 3", b.Title)
 
-	var auu user
-	err = db.FindOne(&auu, "Age", 5)
+	var anotherBook book
+	err = db.FindOne(&anotherBook, "ReleaseYear", 5)
 	assert.Nil(t, err)
-	assert.Equal(t, 5, auu.Age)
+	assert.Equal(t, 5, anotherBook.ReleaseYear)
 
-	err = db.FindOne(&uu, "Name", "harry potter 10")
+	err = db.FindOne(&anotherBook, "Title", "harry potter 10")
 	assert.Equal(t, err, ErrNotFound)
 }
 
@@ -166,16 +162,10 @@ func Test_FindWhere(t *testing.T) {
 	db, err := Open("testing.json")
 	assert.Nil(t, err)
 
-	type user struct {
-		Name string
-		Age  int
-		Genre string
-	}
-
 	for _, i := range []int{1, 2, 3, 4, 5} {
-		u := user{
-			Name: fmt.Sprintf("harry potter %d", i),
-			Age:  i * 10,
+		u := book{
+			Title: fmt.Sprintf("harry potter %d", i),
+			ReleaseYear:  i * 10,
 			Genre: "fiction",
 		}
 		err = db.Save(&u)
@@ -183,17 +173,17 @@ func Test_FindWhere(t *testing.T) {
 		assert.Nil(t, err)
 	}
 
-	var uu []user
-	err = db.FindWhere(&uu, Where{"Name": "harry potter 3", "Age": 30})
+	var b []book
+	err = db.FindWhere(&b, Where{"Title": "harry potter 3", "ReleaseYear": 30})
 	assert.Nil(t, err)
-	assert.Equal(t, 1, len(uu))
-	assert.Equal(t, "harry potter 3", uu[0].Name)
-	assert.Equal(t, 30, uu[0].Age)
+	assert.Equal(t, 1, len(b))
+	assert.Equal(t, "harry potter 3", b[0].Title)
+	assert.Equal(t, 30, b[0].ReleaseYear)
 
-	err = db.FindWhere(&uu, Where{"Name": "harry potter 10"})
+	err = db.FindWhere(&b, Where{"Title": "harry potter 10"})
 	assert.Equal(t, err, ErrNotFound)
 
-	var allBooks []user
+	var allBooks []book
 	err = db.FindWhere(&allBooks, Where{"Genre": "fiction"})
 	assert.Equal(t, 5, len(allBooks))
 }
