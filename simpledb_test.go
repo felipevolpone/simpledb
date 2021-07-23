@@ -19,8 +19,8 @@ func Test_Open(t *testing.T) {
 }
 
 func Test_Save_EmptyData(t *testing.T) {
-	os.Remove("empty.json")
-	db, err := Open("empty.json")
+	os.Remove("testing.json")
+	db, err := Open("testing.json")
 	assert.Nil(t, err)
 
 	for _, value := range []interface{}{
@@ -35,8 +35,8 @@ func Test_Save_EmptyData(t *testing.T) {
 }
 
 func Test_Save(t *testing.T) {
-	os.Remove("empty.json")
-	db, err := Open("empty.json")
+	os.Remove("testing.json")
+	db, err := Open("testing.json")
 	assert.Nil(t, err)
 
 	type user struct {
@@ -63,9 +63,9 @@ func Test_Save(t *testing.T) {
 	assert.Equal(t, 2, numberOfKeys)
 }
 
-func Test_FetchList(t *testing.T) {
-	os.Remove("empty.json")
-	db, err := Open("empty.json")
+func Test_FetchN(t *testing.T) {
+	os.Remove("testing.json")
+	db, err := Open("testing.json")
 	assert.Nil(t, err)
 
 	type user struct {
@@ -85,7 +85,7 @@ func Test_FetchList(t *testing.T) {
 	}
 
 	var users []user
-	err = db.FetchList(&users, 3)
+	err = db.FetchN(&users, 3)
 	assert.Nil(t, err)
 	assert.Equal(t, 3, len(users))
 	assert.Equal(t, "henry 1 david throreau", users[0].Name)
@@ -94,8 +94,8 @@ func Test_FetchList(t *testing.T) {
 }
 
 func Test_Drop(t *testing.T) {
-	os.Remove("empty.json")
-	db, err := Open("empty.json")
+	os.Remove("testing.json")
+	db, err := Open("testing.json")
 	assert.Nil(t, err)
 
 	type user struct {
@@ -124,8 +124,8 @@ func Test_Drop(t *testing.T) {
 }
 
 func Test_FindOne(t *testing.T) {
-	os.Remove("empty.json")
-	db, err := Open("empty.json")
+	os.Remove("testing.json")
+	db, err := Open("testing.json")
 	assert.Nil(t, err)
 
 	type user struct {
@@ -161,36 +161,39 @@ func Test_FindOne(t *testing.T) {
 	assert.Equal(t, err, ErrNotFound)
 }
 
-func Test_FindOneWhere(t *testing.T) {
-	os.Remove("empty.json")
-	db, err := Open("empty.json")
+func Test_FindWhere(t *testing.T) {
+	os.Remove("testing.json")
+	db, err := Open("testing.json")
 	assert.Nil(t, err)
 
 	type user struct {
 		Name string
 		Age  int
+		Genre string
 	}
-
-	notPointer := user{}
-	err = db.FindOneWhere(notPointer, Where{"Name": "Something"})
-	assert.Equal(t, err, ErrDataMustBeStructPointer)
 
 	for _, i := range []int{1, 2, 3, 4, 5} {
 		u := user{
 			Name: fmt.Sprintf("harry potter %d", i),
 			Age:  i * 10,
+			Genre: "fiction",
 		}
 		err = db.Save(&u)
 		time.Sleep(time.Microsecond * 100)
 		assert.Nil(t, err)
 	}
 
-	var uu user
-	err = db.FindOneWhere(&uu, Where{"Name": "harry potter 3", "Age": 30})
+	var uu []user
+	err = db.FindWhere(&uu, Where{"Name": "harry potter 3", "Age": 30})
 	assert.Nil(t, err)
-	assert.Equal(t, "harry potter 3", uu.Name)
-	assert.Equal(t, 30, uu.Age)
+	assert.Equal(t, 1, len(uu))
+	assert.Equal(t, "harry potter 3", uu[0].Name)
+	assert.Equal(t, 30, uu[0].Age)
 
-	err = db.FindOneWhere(&uu, Where{"Name": "harry potter 10"})
+	err = db.FindWhere(&uu, Where{"Name": "harry potter 10"})
 	assert.Equal(t, err, ErrNotFound)
+
+	var allBooks []user
+	err = db.FindWhere(&allBooks, Where{"Genre": "fiction"})
+	assert.Equal(t, 5, len(allBooks))
 }

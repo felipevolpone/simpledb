@@ -94,9 +94,9 @@ func (db *DB) Save(data interface{}) error {
 	return db.write()
 }
 
-// FetchList returns a list of items, if the number of available items is
+// FetchN returns a list of items, if the number of available items is
 // lower then the limit argument its returned anyway
-func (db *DB) FetchList(items interface{}, limit int) error {
+func (db *DB) FetchN(items interface{}, limit int) error {
 
 	valuePtr := reflect.ValueOf(items)
 	elem := valuePtr.Elem()
@@ -176,25 +176,21 @@ func (db *DB) FindOne(item interface{}, field string, value interface{}) error {
 	return nil
 }
 
-// FindOneWhere searches for an item based on a Where expression
-func (db *DB) FindOneWhere(item interface{}, w Where) error {
+// FindWhere searches for an item based on a Where expression
+func (db *DB) FindWhere(items interface{}, whr Where) error {
 
-	ref := reflect.ValueOf(item)
-
-	if !ref.IsValid() || ref.Kind() != reflect.Ptr || ref.Elem().Kind() != reflect.Struct {
-		return ErrDataMustBeStructPointer
-	}
-
+	ref := reflect.ValueOf(items)
 	elem := ref.Elem()
-	structType := reflect.TypeOf(item)
-	namespace := structType.Elem().Name()
 
-	var res gjson.Result
+	sliceType := reflect.Indirect(reflect.ValueOf(items)).Type()
+	namespace := sliceType.Elem().Name()
+
+	var res []gjson.Result
 
 	gjson.Get(db.db.Content.Raw, namespace).ForEach(
 		func(_, vr gjson.Result) bool {
 			found := false
-			for k, v := range w {
+			for k, v := range whr {
 				if vr.Get(fmt.Sprintf("element.%s", k)).String() == fmt.Sprintf("%v", v) {
 					found = true
 					continue
@@ -203,24 +199,26 @@ func (db *DB) FindOneWhere(item interface{}, w Where) error {
 			}
 
 			if found {
-				res = vr
-				return false
+				res = append(res, vr)
 			}
 
 			return true
 		},
 	)
 
-	if !res.Exists() {
+	if len(res) == 0 {
 		return ErrNotFound
 	}
 
-	i := reflect.New(structType.Elem())
-	err := json.Unmarshal([]byte(res.Get("element").String()), i.Interface())
-	if err != nil {
-		return err
+	i := reflect.New(sliceType.Elem())
+	for _, r := range res {
+		err := json.Unmarshal([]byte(r.Get("element").String()), i.Interface())
+		if err != nil {
+			return err
+		}
+
+		elem.Set(reflect.Append(elem, i.Elem()))
 	}
-	elem.Set(i.Elem())
 
 	return nil
 }
