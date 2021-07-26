@@ -6,7 +6,7 @@ simpledb is a local database based on a json file. I wrote this mostly to help m
 in the development of pet projects. This obviouslly should not be used in production.
 
 ```golang
-db, err := Open("local.json")
+db, err := simpledb.Connect("local.json")
 
 type User struct {
     Name          string
@@ -34,12 +34,9 @@ go get github.com/felipevolpone/simpledb
 
 ## API
 
-### Using "tables"
-
-
 #### Save
 ```golang
-db, err := Open("local.json")
+db, err := simpledb.Connect("local.json")
 u := User{Name: "someone", Age:  28}
 err = db.Save(&u)
 ```
@@ -48,7 +45,7 @@ err = db.Save(&u)
 Get one record based on a very simple query.
 
 ```golang
-db, err := Open("local.json")
+db, err := simpledb.Connect("local.json")
 var u user
 err := db.FindOne(&uu, "Name", "someone")
 ```
@@ -78,6 +75,6 @@ to do
 Delete all records of `user` type.
 
 ```golang
-db, err := Open("local.json")
+db, err := simpledb.Connect("local.json")
 err = db.Drop(&user{})
 ```

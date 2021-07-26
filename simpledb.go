@@ -36,8 +36,8 @@ type dbData struct {
 // Where represents data query like SQL where
 type Where map[string]interface{}
 
-// Open opens a database and stabilishes a connection
-func Open(path string) (*DB, error) {
+// Connect opens a database and stabilishes a connection
+func Connect(path string) (*DB, error) {
 
 	dbFile, err := os.OpenFile(path, os.O_RDONLY|os.O_CREATE, os.ModePerm)
 	if err != nil {

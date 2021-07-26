@@ -17,7 +17,7 @@ type book struct{
 }
 
 func Test_Open(t *testing.T) {
-	db, err := Open("local_test.json")
+	db, err := Connect("local_test.json")
 
 	assert.Nil(t, err)
 	assert.NotNil(t, db)
@@ -27,7 +27,7 @@ func Test_Open(t *testing.T) {
 
 func Test_Save_EmptyData(t *testing.T) {
 	os.Remove("testing.json")
-	db, err := Open("testing.json")
+	db, err := Connect("testing.json")
 	assert.Nil(t, err)
 
 	for _, value := range []interface{}{
@@ -43,7 +43,7 @@ func Test_Save_EmptyData(t *testing.T) {
 
 func Test_Save(t *testing.T) {
 	os.Remove("testing.json")
-	db, err := Open("testing.json")
+	db, err := Connect("testing.json")
 	assert.Nil(t, err)
 
 	b := book{
@@ -66,7 +66,7 @@ func Test_Save(t *testing.T) {
 
 func Test_FetchN(t *testing.T) {
 	os.Remove("testing.json")
-	db, err := Open("testing.json")
+	db, err := Connect("testing.json")
 	assert.Nil(t, err)
 
 	type user struct {
@@ -96,7 +96,7 @@ func Test_FetchN(t *testing.T) {
 
 func Test_Drop(t *testing.T) {
 	os.Remove("testing.json")
-	db, err := Open("testing.json")
+	db, err := Connect("testing.json")
 	assert.Nil(t, err)
 
 	type user struct {
@@ -126,7 +126,7 @@ func Test_Drop(t *testing.T) {
 
 func Test_FindOne(t *testing.T) {
 	os.Remove("testing.json")
-	db, err := Open("testing.json")
+	db, err := Connect("testing.json")
 	assert.Nil(t, err)
 
 	notPointer := book{}
@@ -159,7 +159,7 @@ func Test_FindOne(t *testing.T) {
 
 func Test_FindWhere(t *testing.T) {
 	os.Remove("testing.json")
-	db, err := Open("testing.json")
+	db, err := Connect("testing.json")
 	assert.Nil(t, err)
 
 	for _, i := range []int{1, 2, 3, 4, 5} {
