@@ -137,41 +137,45 @@ func (db *DB) Drop(item interface{}) error {
 	return db.write()
 }
 
-// FindOne searches for an item given a field and a value to compare
-func (db *DB) FindOne(item interface{}, field string, value interface{}) error {
 
-	ref := reflect.ValueOf(item)
+// Find searches for an item based on a Where expression
+func (db *DB) Find(items interface{}, field string, value interface{}) error {
 
-	if !ref.IsValid() || ref.Kind() != reflect.Ptr || ref.Elem().Kind() != reflect.Struct {
-		return ErrDataMustBeStructPointer
+	ref := reflect.ValueOf(items)
+	if !ref.IsValid() || ref.Kind() != reflect.Ptr || ref.Elem().Kind() != reflect.Slice {
+		return ErrDataMustBeSlicePointer
 	}
 
 	elem := ref.Elem()
-	structType := reflect.TypeOf(item)
-	namespace := structType.Elem().Name()
 
-	var res gjson.Result
+	sliceType := reflect.Indirect(reflect.ValueOf(items)).Type()
+	namespace := sliceType.Elem().Name()
+
+	var res []gjson.Result
 
 	gjson.Get(db.db.Content.Raw, namespace).ForEach(
-		func(_, v gjson.Result) bool {
-			if v.Get(fmt.Sprintf("element.%s", field)).String() == fmt.Sprintf("%v", value) {
-				res = v
+		func(_, vr gjson.Result) bool {
+			if vr.Get(fmt.Sprintf("element.%s", field)).String() == fmt.Sprintf("%v", value) {
+				res = append(res, vr)
 				return false
 			}
 			return true
 		},
 	)
 
-	if !res.Exists() {
+	if len(res) == 0 {
 		return ErrNotFound
 	}
 
-	i := reflect.New(structType.Elem())
-	err := json.Unmarshal([]byte(res.Get("element").String()), i.Interface())
-	if err != nil {
-		return err
+	i := reflect.New(sliceType.Elem())
+	for _, r := range res {
+		err := json.Unmarshal([]byte(r.Get("element").String()), i.Interface())
+		if err != nil {
+			return err
+		}
+
+		elem.Set(reflect.Append(elem, i.Elem()))
 	}
-	elem.Set(i.Elem())
 
 	return nil
 }
@@ -180,8 +184,11 @@ func (db *DB) FindOne(item interface{}, field string, value interface{}) error {
 func (db *DB) FindWhere(items interface{}, whr Where) error {
 
 	ref := reflect.ValueOf(items)
-	elem := ref.Elem()
+	if !ref.IsValid() || ref.Kind() != reflect.Ptr || ref.Elem().Kind() != reflect.Slice {
+		return ErrDataMustBeSlicePointer
+	}
 
+	elem := ref.Elem()
 	sliceType := reflect.Indirect(reflect.ValueOf(items)).Type()
 	namespace := sliceType.Elem().Name()
 

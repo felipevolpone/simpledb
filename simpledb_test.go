@@ -129,9 +129,9 @@ func Test_FindOne(t *testing.T) {
 	db, err := Connect("testing.json")
 	assert.Nil(t, err)
 
-	notPointer := book{}
-	err = db.FindOne(notPointer, "Name", "Something")
-	assert.Equal(t, err, ErrDataMustBeStructPointer)
+	notPointer := []book{}
+	err = db.Find(notPointer, "Name", "Something")
+	assert.Equal(t, err, ErrDataMustBeSlicePointer)
 
 	for _, i := range []int{1, 2, 3, 4, 5} {
 		u := book{
@@ -143,17 +143,19 @@ func Test_FindOne(t *testing.T) {
 		assert.Nil(t, err)
 	}
 
-	var b book
-	err = db.FindOne(&b, "Title", "harry potter 3")
+	var b []book
+	err = db.Find(&b, "Title", "harry potter 3")
 	assert.Nil(t, err)
-	assert.Equal(t, "harry potter 3", b.Title)
+	assert.Equal(t, 1, len(b))
+	assert.Equal(t, "harry potter 3", b[0].Title)
 
-	var anotherBook book
-	err = db.FindOne(&anotherBook, "ReleaseYear", 5)
+	var anotherBook []book
+	err = db.Find(&anotherBook, "ReleaseYear", 5)
 	assert.Nil(t, err)
-	assert.Equal(t, 5, anotherBook.ReleaseYear)
+	assert.Equal(t, 1, len(anotherBook))
+	assert.Equal(t, 5, anotherBook[0].ReleaseYear)
 
-	err = db.FindOne(&anotherBook, "Title", "harry potter 10")
+	err = db.Find(&anotherBook, "Title", "harry potter 10")
 	assert.Equal(t, err, ErrNotFound)
 }
 
@@ -161,6 +163,10 @@ func Test_FindWhere(t *testing.T) {
 	os.Remove("testing.json")
 	db, err := Connect("testing.json")
 	assert.Nil(t, err)
+
+	notPointer := []book{}
+	err = db.FindWhere(notPointer, Where{"Name": "Something"})
+	assert.Equal(t, err, ErrDataMustBeSlicePointer)
 
 	for _, i := range []int{1, 2, 3, 4, 5} {
 		u := book{

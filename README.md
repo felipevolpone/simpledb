@@ -39,12 +39,12 @@ This project is mostly an interface and some hacks around the great https://gith
 #### Save
 ```golang
 db, err := simpledb.Connect("local.json")
-u := User{Name: "someone", Age:  28}
+u := User{Name: "someone", Age:  99}
 err = db.Save(&u)
 ```
 
-#### FindOne
-Get one record based on a very simple query.
+#### Find
+Gets a list of records based on a very simple query.
 
 ```golang
 db, err := simpledb.Connect("local.json")
@@ -53,7 +53,8 @@ err := db.FindOne(&uu, "Name", "someone")
 ```
 
 #### FindWhere
-Gets a list of records record based on the simpledb.Where param.
+Gets a list of records record based on a more advanced query,
+using the simpledb.Where param.
 
 ```golang
 var users []User
