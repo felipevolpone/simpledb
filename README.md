@@ -32,6 +32,8 @@ go get github.com/felipevolpone/simpledb
 - Extensible
 - Lightweight
 
+This project is mostly an interface and some hacks around the great https://github.com/tidwall/gjson project. 
+
 ## API
 
 #### Save
