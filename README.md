@@ -3,7 +3,9 @@
 > local JSON database from small and pet projects
 
 simpledb is a local database based on a json file. I wrote this mostly to help myself
-in the development of pet projects. This obviouslly should not be used in production.
+in the development of pet projects. *This obviouslly should not be used in production.*
+
+Also, don't take this lib too seriously.
 
 ```golang
 db, err := simpledb.Connect("local.json")
