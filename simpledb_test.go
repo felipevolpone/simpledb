@@ -9,11 +9,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type book struct{
-	Title string
+type book struct {
+	Title       string
 	ReleaseYear int
-	Genre string
-	Highlights []string
+	Genre       string
+	Highlights  []string
 }
 
 func Test_Open(t *testing.T) {
@@ -47,8 +47,8 @@ func Test_Save(t *testing.T) {
 	assert.Nil(t, err)
 
 	b := book{
-		Title: "walden",
-		ReleaseYear:  1854,
+		Title:       "walden",
+		ReleaseYear: 1854,
 	}
 
 	err = db.Save(&b)
@@ -135,8 +135,8 @@ func Test_FindOne(t *testing.T) {
 
 	for _, i := range []int{1, 2, 3, 4, 5} {
 		u := book{
-			Title: fmt.Sprintf("harry potter %d", i),
-			ReleaseYear:  i,
+			Title:       fmt.Sprintf("harry potter %d", i),
+			ReleaseYear: i,
 		}
 		err = db.Save(&u)
 		time.Sleep(time.Microsecond * 100)
@@ -170,9 +170,9 @@ func Test_FindWhere(t *testing.T) {
 
 	for _, i := range []int{1, 2, 3, 4, 5} {
 		u := book{
-			Title: fmt.Sprintf("harry potter %d", i),
-			ReleaseYear:  i * 10,
-			Genre: "fiction",
+			Title:       fmt.Sprintf("harry potter %d", i),
+			ReleaseYear: i * 10,
+			Genre:       "fiction",
 		}
 		err = db.Save(&u)
 		time.Sleep(time.Microsecond * 100)

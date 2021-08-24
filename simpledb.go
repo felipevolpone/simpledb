@@ -137,7 +137,6 @@ func (db *DB) Drop(item interface{}) error {
 	return db.write()
 }
 
-
 // Find searches for an item based on a Where expression
 func (db *DB) Find(items interface{}, field string, value interface{}) error {
 
